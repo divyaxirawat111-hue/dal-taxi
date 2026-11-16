@@ -13,25 +13,26 @@ CREATE TABLE users (
 );
 
 -- : drivers
-CREATE TABLE drivers(
-id  BIGSERIAL PRIMARY KEY REFERENCES user(id),
-car_model VARCHAR(200) NOT NULL,
-plate VARCHAR(200) NOT NULL UNIQUE,
-seats INT NOT NULL CHECK (seats >= 1),
-available BOOLEAN NOT NULL DEFAULT FALSE,
+CREATE TABLE drivers (
+  user_id   BIGINT PRIMARY KEY REFERENCES users(id),
+  car_model VARCHAR(100) NOT NULL,
+  plate     VARCHAR(15)  NOT NULL UNIQUE,
+  seats     INT NOT NULL CHECK (seats >= 1),
+  available BOOLEAN NOT NULL DEFAULT FALSE
 );
 --: trips 
+-- Normal one-rider trips
 CREATE TABLE trips (
-    id       BIGINT PRIMARY KEY,
-rider_id     VARCHAR(100) NOT NULL REFERENCES users(id),
-driver_id    VARCHAR(100) REFERENCES users(id),
-pickup       VARCHAR(200) NOT NULL, 
-dropoff      VARCHAR(200) NOT NULL, 
-status       VARCHAR(200) NOT NULL DEFAULT 'REQUESTED'
-             CHECK (status IN('REQUESTED','ACCEPTED','ON THE WAY','ARRIVED','CANCELLED')  ),
-fare         NUMERIC(8,2),
-requested_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-completed_at  TIMESTAMP ,
+  id           BIGSERIAL PRIMARY KEY,
+  rider_id     BIGINT NOT NULL REFERENCES users(id),
+  driver_id    BIGINT REFERENCES users(id),
+  pickup       VARCHAR(200) NOT NULL,
+  dropoff      VARCHAR(200) NOT NULL,
+  status       VARCHAR(20) NOT NULL DEFAULT 'REQUESTED'
+               CHECK (status IN ('REQUESTED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+  fare         NUMERIC(8,2),
+  requested_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMP
 );
 -- Carpools a driver posts
 CREATE TABLE carpool_groups (
