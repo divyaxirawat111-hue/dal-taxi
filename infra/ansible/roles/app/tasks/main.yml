@@ -1,0 +1,49 @@
+- name: Create a system user that runs the app
+  user:
+    name: "{{ app_user }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Create the app and log folders
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0755"
+  loop:
+    - /opt/dal-taxi
+    - /var/log/dal-taxi
+
+- name: Create the settings folder
+  file:
+    path: /etc/dal-taxi
+    state: directory
+    owner: root
+    group: "{{ app_user }}"
+    mode: "0750"
+
+- name: Write the app settings file (contains the DB password)
+  template:
+    src: app.env.j2
+    dest: /etc/dal-taxi/app.env
+    owner: root
+    group: "{{ app_user }}"
+    mode: "0640"
+  notify: Restart dal-taxi
+
+- name: Install the systemd service
+  template:
+    src: dal-taxi.service.j2
+    dest: /etc/systemd/system/dal-taxi.service
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart dal-taxi
+
+- name: Enable the service so it starts on boot
+  systemd:
+    name: dal-taxi
+    enabled: true
+    daemon_reload: true

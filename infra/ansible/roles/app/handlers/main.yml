@@ -1,0 +1,16 @@
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Check whether the app jar exists
+  stat:
+    path: /opt/dal-taxi/app.jar
+  register: app_jar
+  listen: Restart dal-taxi
+
+- name: Restart the app
+  systemd:
+    name: dal-taxi
+    state: restarted
+  when: app_jar.stat.exists
+  listen: Restart dal-taxi

@@ -1,0 +1,13 @@
+[Unit]
+Description=DAL Taxi backend
+After=network.target postgresql.service
+
+[Service]
+User={{ app_user }}
+EnvironmentFile=/etc/dal-taxi/app.env
+ExecStart=/usr/bin/java -Xmx384m -jar /opt/dal-taxi/app.jar
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
