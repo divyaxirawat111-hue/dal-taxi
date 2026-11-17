@@ -47,3 +47,28 @@
     name: dal-taxi
     enabled: true
     daemon_reload: true
+
+- name: Create the deploy user that Jenkins logs in as
+  user:
+    name: deploy
+    shell: /bin/bash
+
+- name: Allow Jenkins' key to log in as deploy
+  ansible.posix.authorized_key:
+    user: deploy
+    key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/jenkins_deploy.pub') }}"
+
+- name: Install the deploy script
+  template:
+    src: deploy.sh.j2
+    dest: /opt/dal-taxi/deploy.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Let deploy run ONLY the deploy script as root
+  copy:
+    dest: /etc/sudoers.d/deploy
+    content: "deploy ALL=(root) NOPASSWD: /opt/dal-taxi/deploy.sh\n"
+    mode: "0440"
+    validate: "visudo -cf %s"
