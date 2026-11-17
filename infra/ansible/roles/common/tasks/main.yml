@@ -1,0 +1,25 @@
+- name: Update the package list
+  apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  apt:
+    name: [ufw, acl, python3-psycopg2, curl]
+    state: present
+
+- name: Allow SSH through the firewall
+  community.general.ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: Allow the app port through the firewall
+  community.general.ufw:
+    rule: allow
+    port: "{{ app_port }}"
+    proto: tcp
+
+- name: Turn on the firewall
+  community.general.ufw:
+    state: enabled

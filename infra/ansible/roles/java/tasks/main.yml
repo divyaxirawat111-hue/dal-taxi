@@ -1,0 +1,4 @@
+- name: Install the Java 21 runtime
+  apt:
+    name: openjdk-21-jre-headless
+    state: present
