@@ -1,0 +1,28 @@
+#!/bin/bash
+# Swap in the new jar, check health, roll back if it fails
+set -euo pipefail
+NEW=/tmp/app.jar
+APP=/opt/dal-taxi/app.jar
+PREV=/opt/dal-taxi/app.jar.prev
+
+[ -f "$NEW" ] || { echo "No new jar at $NEW"; exit 1; }
+[ -f "$APP" ] && cp "$APP" "$PREV"
+mv "$NEW" "$APP"
+chown {{ app_user }}:{{ app_user }} "$APP"
+systemctl restart dal-taxi
+
+for i in $(seq 1 30); do
+  if curl -fs http://localhost:{{ app_port }}/actuator/health | grep -q '"UP"'; then
+    echo "Deploy OK: app is healthy"
+    exit 0
+  fi
+  sleep 3
+done
+
+echo "Health check failed: rolling back to the previous version"
+if [ -f "$PREV" ]; then
+  cp "$PREV" "$APP"
+  chown {{ app_user }}:{{ app_user }} "$APP"
+  systemctl restart dal-taxi
+fi
+exit 1
